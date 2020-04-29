@@ -21,6 +21,8 @@ class WhatsappBot:
         # )
 
     def send(self, nums, msgs):
+        not_in_cont = []
+        in_contacts = []
         for con in nums:
             self.driver.find_element_by_xpath(
                 '/html/body/div[1]/div/div/div[3]/div/div[1]/div/label/div/div[2]').click()
@@ -32,11 +34,13 @@ class WhatsappBot:
                 "//div[@class='_2wP_Y' and contains(@style,'transform: translateY(72px);')]")
             if len(person) == 0:
                 print(con, "is not there in your contacts")
+                not_in_cont.append([con])
                 tempCheckElement = self.driver.find_elements_by_xpath("//button[@class='_3Burg']")
                 while len(tempCheckElement)==0:
                     tempCheckElement = self.driver.find_elements_by_xpath("//button[@class='_3Burg']")
                 tempCheckElement[0].click()
                 continue
+            in_contacts.append([con])
             person[0].click()
             # sleep(1)
 
@@ -52,10 +56,14 @@ class WhatsappBot:
                         "/html/body/div[1]/div/div/div[4]/div/footer/div[1]/div[2]/div/div[2]").send_keys(
                         Keys.SHIFT, Keys.ENTER)
 
+                sleep(1)
                 self.driver.find_element_by_xpath(
                     '/html/body/div[1]/div/div/div[4]/div/footer/div[1]/div[3]/button').click()
+        return not_in_cont, in_contacts
 
     def send_image(self, nums, captions, path, n_caps):
+        not_in_cont = []
+        in_cont = []
         for con in nums:
             self.driver.find_element_by_xpath(
                 '/html/body/div[1]/div/div/div[3]/div/div[1]/div/label/div/div[2]').click()
@@ -67,11 +75,13 @@ class WhatsappBot:
                 "//div[@class='_2wP_Y' and contains(@style,'transform: translateY(72px);')]")
             if len(person) == 0:
                 print(con, "is not there in your contacts")
+                not_in_cont.append([con])
                 tempCheckElement = self.driver.find_elements_by_xpath("//button[@class='_3Burg']")
                 while len(tempCheckElement) == 0:
                     tempCheckElement = self.driver.find_elements_by_xpath("//button[@class='_3Burg']")
                 tempCheckElement[0].click()
                 continue
+            in_cont.append([con])
             person[0].click()
             # sleep(1)
 
@@ -99,10 +109,10 @@ class WhatsappBot:
             for lines in captions:
                 for line in lines:
                     self.driver.find_element_by_xpath(
-                        "/html/body/div[1]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div[1]/span/div/div[2]/div/div[3]/div[1]/div[2]").send_keys(
+                        "//div[@class='_2S1VP copyable-text selectable-text' and @contenteditable='true']").send_keys(
                         line)
                     self.driver.find_element_by_xpath(
-                        "/html/body/div[1]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div[1]/span/div/div[2]/div/div[3]/div[1]/div[2]").send_keys(
+                        "//div[@class='_2S1VP copyable-text selectable-text' and @contenteditable='true']").send_keys(
                         Keys.SHIFT, Keys.ENTER)
                 if counter != n_caps-1:
                     pic_buttons[counter].click()
@@ -110,7 +120,16 @@ class WhatsappBot:
 
             # sleep(1)
             self.driver.find_element_by_xpath("/html/body/div[1]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div").click()
-            sleep(1)
+            sleep(2)
+        return not_in_cont, in_cont
+
+    def write_csv(self, file_name, con_list):
+        outf = open(file_name, 'w')
+        for row in con_list:
+            for column in row:
+                outf.write('%s' % column)
+            outf.write('\n')
+        outf.close()
 
     def end_task(self):
         self.driver.close()
@@ -129,7 +148,7 @@ while inp.lower() == 'y':
         for row in rd:
             contacts.append(row[0])
 
-    choose = int(input("send message: 0, sent image: 1, get numbers in groups: 3   :  "))
+    choose = int(input("send message: 0, sent image: 1, get numbers in groups: 2   :  "))
     if choose == 0:
         with open('message.txt', 'r') as file:
             message = file.read()
@@ -143,7 +162,9 @@ while inp.lower() == 'y':
                 lines.remove('')
             messages.append(lines)
 
-        my_bot.send(contacts, messages)
+        not_in_contacts, in_contacts = my_bot.send(contacts, messages)
+        my_bot.write_csv("not_in_contacts_message.csv", not_in_contacts)
+        my_bot.write_csv("in_contacts_message.csv", in_contacts)
     elif choose == 1:
         with open('image_caption.txt', 'r') as file:
             caption = file.read()
@@ -162,8 +183,10 @@ while inp.lower() == 'y':
         img_path = img_path.strip()
         # print(img_path)
 
-        my_bot.send_image(contacts, captions, img_path, num_captions)
-    elif choose==3:
+        not_in_contacts, in_contacts = my_bot.send_image(contacts, captions, img_path, num_captions)
+        my_bot.write_csv("not_in_contacts_image.csv", not_in_contacts)
+        my_bot.write_csv("in_contacts_image.csv", in_contacts)
+    elif choose == 2:
         print("Not ready yet")
     else:
         print("Invalid input try again!!!")
