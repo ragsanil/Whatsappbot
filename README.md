@@ -1,5 +1,5 @@
 # Whatsappbot
-Whatsapp bot for sending messages and images to multiple people
+Whatsapp bot for sending messages, images to multiple people and to get members in a group also can add unknown numbers to google contacts.
 
 To use this, install the libraries in requirement.txt
 Download chromedriver from https://chromedriver.chromium.org/downloads
